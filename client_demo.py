@@ -12,6 +12,8 @@ import pathlib
 import subprocess
 import sys
 
+from citations import check_citations
+
 HERE = pathlib.Path(__file__).parent
 
 
@@ -105,6 +107,18 @@ def main() -> int:
     row = json.loads(client.tool("get_trace", {"trace_id": "t-4410aa"})["text"])["rows"][0]
     print(f"payload redaction: keys returned -> {sorted(row)}")
     print("                   payload_path never leaves the server; only payload_available does")
+
+    print("\n--- citation check ---")
+    trace_output = client.tool("get_trace", {"trace_id": "t-4410aa"})["text"]
+    answers = {
+        "grounded":   "REQ-1002 on trace t-4410aa timed out at lumen-pay (502); the retry succeeded.",
+        "fabricated": "REQ-1002 on trace t-4410aa timed out; REQ-9999 shows the same failure.",
+    }
+    for label, answer in answers.items():
+        result = check_citations(answer, [trace_output])
+        flag = "  <- flag before sending" if result["unverified"] else ""
+        print(f"{label:<11} verified={result['verified']} "
+              f"unverified={result['unverified']}{flag}")
 
     client.close()
     print("\nAll calls completed. No network, no API key, no MCP SDK.")

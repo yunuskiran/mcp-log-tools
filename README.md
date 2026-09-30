@@ -75,6 +75,14 @@ exist.
 model that payload bodies are unavailable — so it cannot offer to fetch one — and that results may be
 truncated. Constraints belong where the host can see them, not buried in a prompt.
 
+## Citation check
+
+A model can mistype an ID or invent a plausible one. `citations.py` extracts request, correlation
+and trace ids from the model's answer and checks each against the tool outputs from the same turn;
+`check_citations` returns `verified` and `unverified` lists, and anything unverified should be
+flagged before the reply goes out. The last section of `client_demo.py` shows a fabricated
+`REQ-9999` being caught.
+
 ## MCP or plain function calling?
 
 Both work. The honest trade-off, having shipped both:
@@ -93,6 +101,7 @@ redaction are the engineering. The transport is a deployment decision.
 ```
 server.py                   MCP server over stdio: initialize, tools/list, tools/call
 client_demo.py              a host: handshake, tool listing, one call per tool, guardrail probes
+citations.py                post-check: IDs cited in an answer vs IDs the tools returned
 data/synthetic_logs.jsonl   15 synthetic rows across 3 services and 4 partners
 ```
 
